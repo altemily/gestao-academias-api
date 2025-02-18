@@ -1,0 +1,47 @@
+### Rota para criar o Treino
+POST http://localhost:3000/treinos
+Content-Type: application/json
+
+{
+    "id":"1",
+    "aluno":"Ariane",
+    "personalTrainer":"Francisco Batista",
+    "data": "2025-02-19",
+    "hora": "10:30",
+    "tipoTreino": "Funcional",
+    "status": "Confirmado"
+
+}
+
+###
+
+
+### Rota para listar os treinos
+GET http://localhost:3000/treinos
+
+### 
+
+
+### Buscar treino pelo ID
+
+GET http://localhost:3000/treinos/1
+Content-Type: application/json
+
+###
+
+
+### Atualizar treinos
+PUT localhost:3000/treinos/1
+Content-Type: application/json
+
+{
+
+}
+
+###
+
+### Excluir um agendamento
+DELETE http://localhost:3000/treinos/1
+Content-Type: application/json
+
+###
