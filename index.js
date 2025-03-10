@@ -1,103 +1,101 @@
 const express = require('express');
 const dotenv = require('dotenv');
+const { pool } = require('./src/config/database'); // Importa a conexão com o banco de dados PostgreSQL
 
 dotenv.config(); // Inicializando o dotenv
-
 const port = process.env.PORTA; // Criando uma variável de ambiente
-const app = express(); // Inicializando o express
 
+const app = express(); // Inicializando o express
 app.use(express.json()); // Habilitando o uso de JSON
 
-const bancoDados = []; // Criando um banco de dados 
-
-
 // Criar um novo agendamento
-app.post('/treinos', (requisicao, resposta) => {
+app.post('/treinos', async (requisicao, resposta) => {
   try {
-    const { id, aluno, personalTrainer, data, hora, tipoTreino, status } = requisicao.body;
+    const { aluno, personalTrainer, data, hora, tipoTreino, status } = requisicao.body;
     
-    if (!id || !aluno || !personalTrainer || !data || !hora || !tipoTreino || !status) {
-      return resposta.status(400).json({ mensagem: "Todos os dados devem ser preenchidos." });
+    if (!aluno || !personalTrainer || !data || !hora || !tipoTreino || !status) {
+      return res.status(400).json({ mensagem: "Todos os dados devem ser preenchidos." });
     }
 
-    const novoTreino = { id, aluno, personalTrainer, data, hora, tipoTreino, status };
-    bancoDados.push(novoTreino);
-    
-    resposta.status(201).json({ mensagem: "Treino criado com sucesso." });
+    const resultado = await pool.query(
+      `INSERT INTO treinos (aluno, personal_trainer, data, hora, tipo_treino, status) 
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [aluno, personalTrainer, data, hora, tipoTreino, status]
+    );
+
+    resposta.status(201).json({ mensagem: "Treino criado com sucesso.", treino: resultado.rows[0] });
   } catch (error) {
     resposta.status(500).json({ mensagem: "Erro ao criar o treino.", erro: error.message });
   }
 });
 
 // Listar treinos agendados
-app.get('/treinos', (requisicao, resposta) => {
+app.get('/treinos', async (requisicao, resposta) => {
   try {
-    if (bancoDados.length === 0) {
-      return resposta.status(200).json({ mensagem: "Banco de dados vazio." });
-    }
-    resposta.status(200).json(bancoDados);
+    const resultado = await pool.query("SELECT * FROM treinos");
+    resposta.status(200).json(resultado.rows);
   } catch (error) {
     resposta.status(500).json({ mensagem: "Erro ao buscar treinos.", erro: error.message });
   }
 });
 
 // Buscar agendamento por ID
-app.get('/treinos/:id', (requisicao, resposta) => {
+app.get('/treinos/:id', async (requisicao, resposta) => {
   try {
-    const id = requisicao.params.id;
-    const treino = bancoDados.find(elemento => elemento.id == id);
-    if (!treino) {
+    const { id } = requisicao.params;
+    const resultado = await pool.query("SELECT * FROM treinos WHERE id = $1", [id]);
+
+    if (resultado.rows.length === 0) {
       return resposta.status(404).json({ mensagem: "Treino não encontrado." });
     }
-    
-    return resposta.status(200).json(treino);
+
+    resposta.status(200).json(resultado.rows[0]);
   } catch (error) {
-    return resposta.status(500).json({ mensagem: "Erro ao buscar treino.", erro: error.message });
+    resposta.status(500).json({ mensagem: "Erro ao buscar treino.", erro: error.message });
   }
 });
 
 // Atualizar as informações de um agendamento
-app.put('/treinos/:id', (requisicao, resposta) => {
+app.put('/treinos/:id', async (requisicao, resposta) => {
   try {
-    const id = requisicao.params.id;
-    const { novoTipoTreino, novoStatus } = requisicao.body;
+    const { id } = requisicao.params;
+    const { tipoTreino, status } = requisicao.body;
 
-    const treino = bancoDados.find(elemento => elemento.id == id); 
-    
-    if (!treino) {
+    const resultado = await pool.query(
+      `UPDATE treinos SET tipo_treino = COALESCE($1, tipo_treino), 
+                         status = COALESCE($2, status) 
+       WHERE id = $3 RETURNING *`,
+      [tipoTreino, status, id]
+    );
+
+    if (resultado.rows.length === 0) {
       return resposta.status(404).json({ mensagem: "Treino não encontrado." });
     }
 
-    if (!novoTipoTreino && !novoStatus) {
-      return resposta.status(400).json({ mensagem: "Os dados devem ser preenchidos." });
-    }
-
-    if (novoTipoTreino) treino.tipoTreino = novoTipoTreino;
-    if (novoStatus) treino.status = novoStatus;
-
-    return resposta.status(200).json({ mensagem: "Treino atualizado com sucesso." });
+    resposta.status(200).json({ mensagem: "Treino atualizado com sucesso.", treino: resultado.rows[0] });
   } catch (error) {
-    return resposta.status(500).json({ mensagem: "Erro ao atualizar treino.", erro: error.message });
+    resposta.status(500).json({ mensagem: "Erro ao atualizar treino.", erro: error.message });
   }
 });
 
 // Excluir um agendamento
-app.delete('/treinos/:id', (requisicao, resposta) => {
+app.delete('/treinos/:id', async (requisicao, resposta) => {
   try {
-    const id = requisicao.params.id;
-    const index = bancoDados.findIndex(elemento => elemento.id == id); 
-    
-    if (index === -1) {
+    const { id } = requisicao.params;
+    const resultado = await pool.query("DELETE FROM treinos WHERE id = $1 RETURNING *", [id]);
+
+    if (resultado.rows.length === 0) {
       return resposta.status(404).json({ mensagem: "Treino não encontrado." });
     }
 
-    bancoDados.splice(index, 1);
-    return resposta.status(200).json({ mensagem: "Treino excluído com sucesso." });
+    resposta.status(200).json({ mensagem: "Treino excluído com sucesso." });
   } catch (error) {
-    return resposta.status(500).json({ mensagem: "Erro ao excluir treino.", erro: error.message });
+    resposta.status(500).json({ mensagem: "Erro ao excluir treino.", erro: error.message });
   }
 });
+
 // Inicializando o servidor
 app.listen(port, () => {
   console.log(`Servidor rodando em http://localhost:${port}`);
 });
+

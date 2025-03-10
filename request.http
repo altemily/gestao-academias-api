@@ -35,7 +35,9 @@ PUT localhost:3000/treinos/1
 Content-Type: application/json
 
 {
-
+    "id":,
+    "tipoTreino":,
+    "status":
 }
 
 ###
