@@ -3,12 +3,12 @@ POST http://localhost:3000/treinos
 Content-Type: application/json
 
 {
-    "id":"1",
+    "id":"3",
     "aluno":"Ariane",
     "personalTrainer":"Francisco Batista",
     "data": "2025-02-19",
     "hora": "10:30",
-    "tipoTreino": "Funcional",
+    "tipoTreino": "Cardio",
     "status": "Confirmado"
 
 }
@@ -31,13 +31,13 @@ Content-Type: application/json
 
 
 ### Atualizar treinos
-PUT localhost:3000/treinos/1
+PUT http://localhost:3000/treinos/2
 Content-Type: application/json
 
 {
-    "id":,
-    "tipoTreino":,
-    "status":
+    "id":"2",
+    "tipoTreino":"Cardio",
+    "status":"Cancelado"
 }
 
 ###
