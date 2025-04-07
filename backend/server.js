@@ -3,8 +3,8 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-const PORTA = process.env.PORTA || 3000;
+const port = process.env.PORTA;
 
-app.listen(PORTA, () => {
-  console.log(`Servidor rodando na porta ${PORTA}`);
+app.listen(port, () => {
+  console.log(`Servidor rodando em http://localhost:${port}`);
 });
