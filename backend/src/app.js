@@ -1,15 +1,16 @@
 const express = require('express');
 const app = express();
-const alunoRoutes = require('./modules/aluno/routes/index')
-const personalTrainerRotas = require('./modules/personal/routes/index');
+const alunoRoutes = require('./modules/aluno/routes/index');
+const personalTrainerRoutes = require('./modules/personal/routes/index');
+const enderecoRoutes = require('./modules/endereco/routes/index'); 
 
 // Middlewares
 app.use(express.json());
 
 // Rotas
 app.use('/alunos', alunoRoutes);
-app.use('/personal-trainers', personalTrainerRotas);
-
+app.use('/personal-trainers', personalTrainerRoutes);
+app.use('/enderecos', enderecoRoutes); 
 
 // Middleware para rotas não encontradas
 app.use((requisicao, resposta) => {
